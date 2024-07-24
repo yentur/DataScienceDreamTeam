@@ -3,7 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from models.LinearRegression import LinearRegression
 import time
-
+st.set_page_config(layout="wide")
 st.title("Linear Regression")
 
 tab1,tab2=st.tabs(['Teori','Kod'])
