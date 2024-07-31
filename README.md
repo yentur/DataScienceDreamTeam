@@ -1,4 +1,8 @@
 # DataScienceDreamTeam
 
-# Web Link: https://kte-datasciencedreamteam-linearregression.streamlit.app/
-Discord: https://discord.gg/3pZYknszqJ
+1. Linear Regresyon streamlit link :
+
+   https://kte-datasciencedreamteam-linearregression.streamlit.app/
+
+Original Link : https://datasciencedreamteam.streamlit.app/
+Team Discord Link: https://discord.gg/3pZYknszqJ
