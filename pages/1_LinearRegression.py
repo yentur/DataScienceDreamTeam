@@ -8,7 +8,7 @@ import pandas as pd
 st.set_page_config(layout="wide")
 st.title("Linear Regression")
 
-df=pd.read_csv(r"datasets\CarPrice_Assignment.csv")
+df=pd.read_csv("./datasets/CarPrice_Assignment.csv")
 
 tab1,tab2=st.tabs(['Teori','Kod'])
 
@@ -72,7 +72,7 @@ with tab1:
     chart_1=st.empty()
 
     with st.expander("Adjust Parameters"):
-        st.session_state.B0 = st.slider("B0", min_value=b0-100, max_value=b0+100.0, value=st.session_state.B0)
+        st.session_state.B0 = st.slider("B0", min_value=0.0, max_value=1.0, value=st.session_state.B0)
         st.session_state.B1 = st.slider("B1", min_value=b1-110.0, max_value=b1+100.0, value=st.session_state.B1)
         st.latex(f"y = {st.session_state.B0:.2f}x + {st.session_state.B1:.2f}")
 
