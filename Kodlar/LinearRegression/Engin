@@ -1,0 +1,291 @@
+import streamlit as st
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Sabit veri seti oluşturma
+np.random.seed(0)  # Sabit bir seed kullanarak randomness'i sabit tutma
+num_samples = st.sidebar.slider('Veri Sayısı', min_value=1, max_value=100, value=100)
+X = 2 * np.random.rand(num_samples, 1)
+base_y = 4 + 3 * X  # Sabit bir temel eğim ve kesişim noktası ile veri oluşturma
+
+# Streamlit arayüzüne slider ekleyerek eğim, intercept ve gürültü seviyesini al
+m = st.sidebar.slider('Eğim (m)', min_value=-10.0, max_value=10.0, value=3.0, step=0.1)
+b = st.sidebar.slider('Kesişim Noktası (b)', min_value=-10.0, max_value=20.0, value=4.0, step=0.1)
+noise = st.sidebar.slider('Gürültü Seviyesi (Noise)', min_value=0.0, max_value=10.0, value=1.0, step=0.1)
+
+# Gürültü seviyesine göre y değerlerini güncelleme
+y = base_y + noise * np.random.randn(num_samples, 1)
+
+# X ve Y değerlerini yan yana göstermek için sidebar'da alan oluşturma
+st.sidebar.header("Veri Seti")
+st.sidebar.write("**X Değerleri**")
+st.sidebar.write(X.flatten())
+st.sidebar.write("**y Değerleri**")
+st.sidebar.write(y.flatten())
+
+# Doğrusal Regresyon Açıklaması
+st.title("Doğrusal Regresyon ve Öğrenme Yöntemleri")
+
+st.header("Doğrusal Regresyon Nedir?")
+st.write("""
+Doğrusal Regresyon, bağımsız değişkenler (X) ile bağımlı değişken (y) arasındaki doğrusal ilişkiyi modellemek için kullanılan 
+temel bir istatistiksel tekniktir. Bu yöntem, verileri analiz etmek ve tahminlerde bulunmak için kullanılan en yaygın ve basit 
+regresyon yöntemlerinden biridir. Doğrusal regresyon, bir bağımlı değişkenin (hedef değişken) bir veya daha fazla bağımsız 
+değişken (açıklayıcı değişkenler) ile olan doğrusal ilişkisini ifade eder.
+
+### Temel Kavramlar
+Doğrusal regresyon modeli, iki ana bileşenden oluşur:
+1. **Eğim (m)**: Bağımsız değişkenin bağımlı değişken üzerindeki etkisini ölçer. Eğim, bağımsız değişkendeki bir birimlik 
+değişikliğin bağımlı değişkendeki değişikliğini gösterir.
+2. **Y ekseni kesişimi (b)**: Modelin başlangıç noktasını belirler. Bağımsız değişkenin sıfır olduğu durumda bağımlı değişkenin 
+değerini ifade eder.
+
+### Doğrusal Regresyon Modeli
+Doğrusal regresyon modeli, aşağıdaki gibi bir doğrusal denklemle ifade edilir:
+
+\\[
+y = mx + b
+\\]
+
+Burada:
+- \\( y \\), bağımlı değişkeni,
+- \\( x \\), bağımsız değişkeni,
+- \\( m \\), eğimi (slope),
+- \\( b \\), y ekseni kesişimini (intercept) temsil eder.
+
+Doğrusal regresyonun amacı, bu denklemi en iyi şekilde tanımlayacak parametreleri (m ve b) bulmaktır. Bu parametreler, bağımsız 
+değişkenlerin bağımlı değişken üzerindeki etkisini en iyi şekilde açıklayan doğrusal bir ilişki sağlar.
+""")
+
+# Veri noktalarını gösteren grafik
+st.subheader("Veri Noktaları")
+fig, ax = plt.subplots()
+ax.scatter(X, y, color='blue', label='Veri Noktaları')
+line_x = np.linspace(0, 2, 100)
+line_y = m * line_x + b
+ax.plot(line_x, line_y, color='red', label=f'Doğru: y = {m}x + {b}')
+ax.set_xlabel('X Değeri')
+ax.set_ylabel('Y Değeri')
+ax.set_xlim(0, 2)
+ax.set_ylim(-5, 25)
+ax.legend()
+st.pyplot(fig)
+
+st.header("1. Ordinary Least Squares (OLS)")
+st.write("""
+Ordinary Least Squares (OLS), doğrusal regresyon modellerinde en uygun doğruyu bulmak için kullanılan yaygın bir yöntemdir. 
+OLS, hata kareleri toplamını (Sum of Squared Errors - SSE) minimize etmeye çalışır. Bu yöntemde, veri noktalarının model 
+tarafından tahmin edilen değerler ile gerçek değerler arasındaki farklar, hata olarak adlandırılır ve bu hataların karelerinin 
+toplamı minimize edilmeye çalışılır.
+""")
+
+st.latex(r"SSE = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2")
+st.write("""
+Burada, \\( y_i \\) gerçek değerleri, \\( \hat{y}_i \\) modelin tahmin ettiği değerleri ve n ise gözlem sayısını ifade eder. 
+SSE, modelin ne kadar iyi uyum sağladığını gösterir; daha düşük bir SSE, daha iyi bir model uyumu anlamına gelir.
+""")
+
+st.subheader("OLS Hesaplama Fonksiyonu")
+st.code("""
+# Ortalama Değerleri Hesaplama
+n = len(X)
+mean_X = np.mean(X)
+mean_y = np.mean(y)
+
+# Eğim (m) Hesaplama
+numerator = np.sum((X - mean_X) * (y - mean_y))
+denominator = np.sum((X - mean_X) ** 2)
+m = numerator / denominator
+
+# Y ekseni kesişimi (b) hesaplama
+b = mean_y - m * mean_X
+""", language="python")
+
+st.header("Adım Adım OLS Hesaplamaları")
+
+# Ortalama Değerleri Hesaplama
+n = len(X)
+mean_X = np.mean(X)
+mean_y = np.mean(y)
+st.subheader("1. Ortalama Değerleri Hesaplama:")
+st.write("""
+Ortalama değerler, veri setindeki bağımsız ve bağımlı değişkenlerin ortalama değerleridir. Bu değerler, OLS 
+hesaplamalarında temel bir rol oynar.
+""")
+st.latex(r"\bar{X} = \frac{1}{n} \sum_{i=1}^{n} X_i")
+st.latex(r"\bar{y} = \frac{1}{n} \sum_{i=1}^{n} y_i")
+st.write(f"Ortalama X (mean_X): {mean_X}")
+st.write(f"Ortalama y (mean_y): {mean_y}")
+
+# Eğim (m) Hesaplama
+numerator = np.sum((X - mean_X) * (y - mean_y))
+denominator = np.sum((X - mean_X) ** 2)
+m = numerator / denominator
+st.subheader("2. Eğim (m) Hesaplama:")
+st.write("""
+Eğim (m), bağımsız değişkenin bağımlı değişken üzerindeki etkisini ölçer. 
+Eğim, X'teki bir birimlik değişikliğin y'deki değişikliğini gösterir.
+""")
+st.latex(r"m = \frac{\sum_{i=1}^{n} (X_i - \bar{X})(y_i - \bar{y})}{\sum_{i=1}^{n} (X_i - \bar{X})^2}")
+st.write(f"Eğim (m) Değeri: {m}")
+
+# Y ekseni kesişimi (b) hesaplama
+b = mean_y - m * mean_X
+st.subheader("3. Y Eksenini Kesme Noktası (b) Hesaplama:")
+st.write("""
+Y eksenini kesme noktası (b), X'in sıfır olduğu durumda y'nin değerini gösterir. 
+Bu, modelin başlangıç noktasını belirler.
+""")
+st.latex(r"b = \bar{y} - m \bar{X}")
+st.write(f"Y Ekseni Kesişimi (b) Değeri: {b}")
+
+# OLS RMSE hesaplama
+y_hat_ols = m * X + b
+rmse_ols = np.sqrt(np.mean((y - y_hat_ols) ** 2))
+st.latex(r"\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}")
+st.write(f"OLS RMSE: {rmse_ols}")
+
+# Veri noktaları ve regresyon doğrusunu çizme
+fig, ax = plt.subplots()
+ax.scatter(X, y, color='blue', label='Veri Noktaları')
+line_x = np.array([min(X), max(X)])
+line_y = m * line_x + b
+ax.plot(line_x, line_y, color='red', label='En Uygun Doğru (OLS)')
+ax.set_xlabel('X Değeri')
+ax.set_ylabel('Y Değeri')
+ax.set_xlim(0, 2)
+ax.set_ylim(-5, 25)
+ax.legend()
+st.pyplot(fig)
+
+st.write("""
+Yukarıdaki grafik, veri noktalarını ve OLS yöntemiyle elde edilen en uygun doğrusal modeli göstermektedir. 
+Kırmızı çizgi, modelin tahmin ettiği doğrusal ilişkiyi temsil eder. Bu çizgi, veri noktalarına en uygun doğrusal 
+modeli bulmak için OLS'nin minimize ettiği hata kareleri toplamı (SSE) kullanılarak hesaplanmıştır.
+""")
+
+st.header("2. Gradient Descent")
+st.write("""
+Gradient Descent, doğrusal regresyon modelini öğrenmek için kullanılan bir başka yaygın yöntemdir. Bu algoritma, 
+hata fonksiyonunu minimize etmek için iteratif bir yaklaşım kullanır. Başlangıçta rastgele bir noktadan başlanarak, 
+fonksiyonun eğimine bakılarak minimum noktaya doğru adımlar atılır. Adım boyutu, öğrenme oranı (learning rate) olarak 
+adlandırılır. Doğru öğrenme oranı seçildiğinde, gradient descent algoritması global minimuma ulaşır ve en uygun model 
+parametrelerini bulur.
+""")
+
+st.subheader("Maliyet Fonksiyonu ve Türevleri")
+st.write("""
+Gradient Descent algoritması, bir maliyet fonksiyonunu minimize ederek en uygun parametreleri bulur. Doğrusal regresyonda 
+kullanılan maliyet fonksiyonu genellikle **Ortalama Kare Hatası (MSE)** olarak bilinir. MSE, modelin tahmin ettiği 
+değerlerle gerçek değerler arasındaki farkların karelerinin ortalamasıdır.
+
+Maliyet fonksiyonu şu şekilde tanımlanır:
+""")
+st.latex(r"J(m, b) = \frac{1}{n} \sum_{i=1}^{n} (y_i - (mx_i + b))^2")
+
+st.write("""
+Burada, \\( J(m, b) \\) maliyet fonksiyonunu, \\( y_i \\) gerçek değerleri, \\( x_i \\) bağımsız değişken değerlerini 
+ve \\( \hat{y}_i = mx_i + b \\) modelin tahmin ettiği değerleri ifade eder.
+
+Gradient Descent algoritması, maliyet fonksiyonunun türevlerini kullanarak m ve b parametrelerini günceller. Türevler, 
+maliyet fonksiyonunun eğimini belirler ve bu eğime göre parametreler güncellenir. Güncelleme kuralları şu şekildedir:
+""")
+
+st.latex(r"m := m - \alpha \frac{\partial J(m, b)}{\partial m}")
+st.latex(r"b := b - \alpha \frac{\partial J(m, b)}{\partial b}")
+
+st.write("""
+Burada, \\( \alpha \\) öğrenme oranını temsil eder. Türevler, maliyet fonksiyonunun m ve b'ye göre eğimini 
+gösterir ve bu eğim, parametrelerin hangi yönde ve ne kadar değiştirileceğini belirler.
+""")
+
+st.subheader("Kısmi Türevler")
+st.write("""
+Gradient Descent algoritmasında kullanılan kısmi türevler, model parametrelerinin nasıl güncelleneceğini belirler. 
+Bu kısmi türevler şu şekildedir:
+""")
+
+st.latex(r"\frac{\partial J(m, b)}{\partial m} = -\frac{2}{n} \sum_{i=1}^{n} x_i (y_i - (mx_i + b))")
+st.latex(r"\frac{\partial J(m, b)}{\partial b} = -\frac{2}{n} \sum_{i=1}^{n} (y_i - (mx_i + b))")
+
+st.write("""
+Bu türevler, parametrelerin güncellenmesi için kullanılır ve her bir iterasyonda parametreler, maliyet fonksiyonunun 
+minimuma yakınsaması için değiştirilir.
+""")
+
+# Gradient Descent Uygulaması
+def gradient_descent(X, y, learning_rate=0.01, epochs=1000):
+    """
+    Gradient Descent algoritmasını kullanarak doğrusal regresyon modelinin parametrelerini öğrenir.
+
+    Parametreler:
+    - X: Bağımsız değişkenler (numpy array)
+    - y: Bağımlı değişken (numpy array)
+    - learning_rate: Öğrenme oranı (alpha)
+    - epochs: İterasyon sayısı
+
+    Çıktı:
+    - m: Eğim (slope)
+    - b: Kesim (intercept)
+    """
+    n = len(X)
+    m = 0
+    b = 0
+
+    for epoch in range(epochs):
+        y_pred = m * X + b
+        dm = (-2 / n) * np.sum(X * (y - y_pred))
+        db = (-2 / n) * np.sum(y - y_pred)
+        m = m - learning_rate * dm
+        b = b - learning_rate * db
+
+    return m, b
+
+st.subheader("Gradient Descent Hesaplama Fonksiyonu")
+st.code("""
+def gradient_descent(X, y, learning_rate=0.01, epochs=1000):
+    n = len(X)
+    m = 0
+    b = 0
+
+    for epoch in range(epochs):
+        y_pred = m * X + b
+        dm = (-2/n) * np.sum(X * (y - y_pred))
+        db = (-2/n) * np.sum(y - y_pred)
+        m = m - learning_rate * dm
+        b = b - learning_rate * db
+
+    return m, b
+""", language="python")
+
+# Gradient Descent'i çağırma
+learning_rate = 0.01
+epochs = 1000
+m_gd, b_gd = gradient_descent(X, y, learning_rate, epochs)
+
+st.write(f"Gradient Descent ile bulunan Eğim (m): {m_gd}")
+st.write(f"Gradient Descent ile bulunan Kesim (b): {b_gd}")
+
+# Gradient Descent RMSE hesaplama
+y_hat_gd = m_gd * X + b_gd
+rmse_gd = np.sqrt(np.mean((y - y_hat_gd) ** 2))
+st.latex(r"\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}")
+st.write(f"Gradient Descent RMSE: {rmse_gd}")
+
+# Veri noktaları ve Gradient Descent doğrusu
+fig, ax = plt.subplots()
+ax.scatter(X, y, color='blue', label='Veri Noktaları')
+line_y = m_gd * line_x + b_gd
+ax.plot(line_x, line_y, color='green', label='Gradient Descent Doğrusu')
+ax.set_xlabel('X Değeri')
+ax.set_ylabel('Y Değeri')
+ax.set_xlim(0, 2)
+ax.set_ylim(-5, 25)
+ax.legend()
+st.pyplot(fig)
+
+st.write("""
+Yukarıdaki grafik, veri noktalarını ve Gradient Descent yöntemiyle elde edilen en uygun doğrusal modeli göstermektedir. 
+Yeşil çizgi, modelin tahmin ettiği doğrusal ilişkiyi temsil eder. Bu çizgi, Gradient Descent algoritması kullanılarak 
+hesaplanan model parametreleriyle elde edilmiştir.
+""")
